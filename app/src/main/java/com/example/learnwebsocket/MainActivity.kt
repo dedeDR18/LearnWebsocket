@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val WEB_SOCKET_URL = "wss://ws-feed.pro.coinbase.com"
+        const val TAG = "WEBSOCKET"
     }
 
     private lateinit var websocketclient: WebSocketClient
@@ -28,10 +29,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        iniViews()
+
+    }
+
+    private fun iniViews(){
         btcPrice = findViewById(R.id.btc_price_tv)
         ltcPrice = findViewById(R.id.ltc_price_tv)
         ethPrice = findViewById(R.id.eth_price_tv)
-
     }
 
     private fun initWebsocket(){
@@ -45,30 +50,32 @@ class MainActivity : AppCompatActivity() {
     private fun createWebsocketClient(coinbaseUri: URI?) {
         websocketclient = object : WebSocketClient(coinbaseUri){
             override fun onOpen(handshakedata: ServerHandshake?) {
-                Log.d("WEBSOCKET", "onOpen")
+                Log.d(TAG, "onOpen")
                 subscribe()
             }
 
             override fun onMessage(message: String?) {
-                Log.d("WEBSOCKET", "onMessage: $message")
-                setUpBtcPriceText(message)
+                Log.d(TAG, "onMessage: $message")
+                setUpPriceText(message)
             }
 
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
-                Log.d("WEBSOCKET", "onClose")
+                Log.d(TAG, "onClose")
                 unsubscribe()
             }
 
             override fun onError(ex: Exception?) {
-                Log.e("WEBSOCKET", "onError: ${ex?.message}")
+                Log.e(TAG, "onError: ${ex?.message}")
             }
 
         }
     }
 
+    private fun closeWebsocket(){
+        websocketclient.close()
+    }
 
-
-    private fun setUpBtcPriceText(message: String?) {
+    private fun setUpPriceText(message: String?) {
         message?.let { message ->
             val moshi = Moshi.Builder().build()
             val adapter: JsonAdapter<Coin> = moshi.adapter(Coin::class.java)
@@ -101,7 +108,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
     override fun onResume() {
         super.onResume()
         initWebsocket()
@@ -109,8 +115,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        websocketclient.close()
+        closeWebsocket()
     }
-
-
 }
