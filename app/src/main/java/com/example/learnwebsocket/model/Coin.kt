@@ -10,4 +10,7 @@ import com.squareup.moshi.JsonClass
  */
 
 @JsonClass(generateAdapter = true)
-data class Bitcoin(val price: String?)
+data class Coin(
+    val product_id: String?,
+    val price: String?
+    )
